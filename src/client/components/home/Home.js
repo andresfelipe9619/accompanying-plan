@@ -89,12 +89,14 @@ export default function Home() {
   const handleChange = event => {
     setProyecto(event.target.value);
   };
+
   useEffect(() => {
-    // fetchProfessors();
+    fetchProfessors();
     // fetchLines();
   }, []);
 
   console.log('institutions', institutions);
+  console.log('professors', professors);
   if (loading) return <div>Loading ...</div>;
   return (
     <Grid container spacing={2}>
