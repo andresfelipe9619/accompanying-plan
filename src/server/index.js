@@ -9,21 +9,10 @@ global.doPost = publicMainFunction.doPost;
 // BUSINESS LOGIC FUNCTIONS
 global.isAdmin = publicMainFunction.isAdmin;
 global.getCurrentUser = publicMainFunction.getCurrentUser;
-global.getHouses = publicMainFunction.getHouses;
-global.createHouse = publicMainFunction.createHouse;
-global.updateHouse = publicMainFunction.updateHouse;
-global.updateComment = publicMainFunction.updateComment;
-global.createComment = publicMainFunction.createComment;
-global.createBuilders = publicMainFunction.createBuilders;
-global.createModels = publicMainFunction.createModels;
-global.getFilesGroups = publicMainFunction.getFilesGroups;
-global.getUsers = publicMainFunction.getUsers;
-global.getBuilders = publicMainFunction.getBuilders;
-global.getModels = publicMainFunction.getModels;
-global.getZones = publicMainFunction.getZones;
-global.getComments = publicMainFunction.getComments;
-global.getHouseFiles = publicMainFunction.getHouseFiles;
-global.getHouseStatuses = publicMainFunction.getHouseStatuses;
+global.getProfessors = publicMainFunction.getProfessors;
+global.createProfessor = publicMainFunction.createProfessor;
+global.updateProfessor = publicMainFunction.updateProfessor;
+global.getInstitutions = publicMainFunction.getInstitutions;
 
 // DRIVE FUNCTIONS
 global.createHouseFile = publicDriveFunctions.createHouseFile;
@@ -36,11 +25,7 @@ global.getHouseCommentsFolder = publicDriveFunctions.getHouseCommentsFolder;
 // SPREADSHEET FUNCTIONS
 global.getSheetFromSpreadSheet = publicSheetFunctions.getSheetFromSpreadSheet;
 global.getRawDataFromSheet = publicSheetFunctions.getRawDataFromSheet;
-global.getSheetsData = publicSheetFunctions.getSheetsData;
-global.addSheet = publicSheetFunctions.addSheet;
 global.findText = publicSheetFunctions.findText;
-global.deleteSheet = publicSheetFunctions.deleteSheet;
-global.setActiveSheet = publicSheetFunctions.setActiveSheet;
 global.getHeadersFromSheet = publicSheetFunctions.getHeadersFromSheet;
 global.jsonToSheetValues = publicSheetFunctions.jsonToSheetValues;
 global.sheetValuesToObject = publicSheetFunctions.sheetValuesToObject;

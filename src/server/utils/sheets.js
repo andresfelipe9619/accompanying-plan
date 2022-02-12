@@ -1,9 +1,6 @@
-const GENERAL_DB =
-  'https://docs.google.com/spreadsheets/d/1ksDWP8Z0NjouxMf8axJ_gQDHvTyvfgviizGtBBHN1hs/edit#gid=0';
-
-const getSheets = () => SpreadsheetApp.getActive().getSheets();
-
-const getActiveSheetName = () => SpreadsheetApp.getActive().getSheetName();
+const GOOGLE_URL = 'https://docs.google.com/spreadsheets';
+const SHEET_ID = '1RNmlIWN3Hxk9Lq-0Or5smLvtgOo3YYAkjCZ9pBDf398';
+const GENERAL_DB = `${GOOGLE_URL}/d/${SHEET_ID}/edit#gid=0`;
 
 function normalizeString(value) {
   return String(value || '')
@@ -37,36 +34,6 @@ export function getRawDataFromSheet(sheet, url) {
   }
   return null;
 }
-
-export const getSheetsData = () => {
-  const activeSheetName = getActiveSheetName();
-  return getSheets().map((sheet, index) => {
-    const name = sheet.getName();
-    return {
-      name,
-      index,
-      isActive: name === activeSheetName,
-    };
-  });
-};
-
-export const addSheet = sheetTitle => {
-  SpreadsheetApp.getActive().insertSheet(sheetTitle);
-  return getSheetsData();
-};
-
-export const deleteSheet = sheetIndex => {
-  const sheets = getSheets();
-  SpreadsheetApp.getActive().deleteSheet(sheets[sheetIndex]);
-  return getSheetsData();
-};
-
-export const setActiveSheet = sheetName => {
-  SpreadsheetApp.getActive()
-    .getSheetByName(sheetName)
-    .activate();
-  return getSheetsData();
-};
 
 export function findText({ sheet, text }) {
   let index = -1;

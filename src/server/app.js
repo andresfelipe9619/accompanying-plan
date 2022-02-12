@@ -15,7 +15,7 @@ export function isAdmin() {
 
 function createHtmlTemplate(filename) {
   return HtmlService.createHtmlOutputFromFile(filename)
-    .setTitle('HR Drywall')
+    .setTitle('Plan de Acompañamiento')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
 }
 
@@ -43,157 +43,24 @@ function getEntityData(entity) {
   return entities;
 }
 
-function getHousesSheet() {
-  const sheet = global.getSheetFromSpreadSheet('HOUSES');
+function getProfessorsSheet() {
+  const sheet = global.getSheetFromSpreadSheet('PROFESORES');
   const headers = global.getHeadersFromSheet(sheet);
   return { sheet, headers };
 }
 
-export function getHouseFiles(house) {
-  if (!house.files) return house;
-  const newHouse = { ...house };
-  const { idHouse, address, zone } = newHouse;
-  Logger.log(`newHouse`, newHouse);
-  const folder = global.getHouseFolder({
-    zone,
-    idHouse: `${idHouse} / ${address}`,
-  });
-  const subFolders = folder.getFolders();
-  const houseFiles = {};
-  while (subFolders.hasNext()) {
-    const fileGroupFolder = subFolders.next();
-    const groupName = fileGroupFolder.getName();
-    const groupFiles = fileGroupFolder.getFiles();
-    const files = [];
-    while (groupFiles.hasNext()) {
-      const file = groupFiles.next();
-      files.push({ name: file.getName(), url: file.getUrl() });
-    }
-    houseFiles[groupName] = files;
-  }
-  newHouse.filesGroups = houseFiles;
-  return newHouse;
+export function getProfessors() {
+  return getEntityData('PROFESORES');
 }
 
-export function getHouses() {
-  return getEntityData('HOUSES');
-}
-
-export function getHouseStatuses() {
-  return getEntityData('HOUSE STATUSES');
-}
-
-export function getFilesGroups() {
-  return getEntityData('FILES GROUPS');
-}
-
-export function getUsers() {
-  return getEntityData('USERS');
-}
-
-export function getBuilders() {
-  return getEntityData('BUILDERS');
-}
-
-export function getModels() {
-  return getEntityData('MODELS');
-}
-
-export function getZones() {
-  return getEntityData('ZONES');
-}
-
-export function getComments() {
-  return getEntityData('COMMENTS');
-}
-
-function getHousesZoneSheet(zone, sheetName) {
-  const zones = getZones();
-  const found = zones.find(z => z.name === zone);
-  if (!found || !found.sheet) {
-    return {sheet: null, headers: null};
-  }
-  const sheet = global.getSheetFromSpreadSheet(sheetName, found.sheet);
-  const headers = global.getHeadersFromSheet(sheet);
-  return { sheet, headers };
+export function getInstitutions() {
+  return getEntityData('INSTITUCIONES EDUCATIVAS');
 }
 
 export function getCommentsSheet() {
   const sheet = global.getSheetFromSpreadSheet('COMMENTS');
   const headers = global.getHeadersFromSheet(sheet);
   return { sheet, headers };
-}
-
-function registerHouse(data) {
-  Logger.log('=============Registering HOUSE===========');
-  const response = { ok: false, data: null };
-  const { sheet, headers } = getHousesSheet();
-  const { sheet: zoneSheet, headers: zoneHeaders } = getHousesZoneSheet(
-    data.zone, "HOUSES"
-  );
-
-  if(!zoneSheet){
-    response.data =  `The zone ${data.zone} doesn't register sheet`
-    return response
-  }
-
-  const currentLastRow = sheet.getLastRow();
-  const zoneLastRow = zoneSheet.getLastRow();
-  let lastRowId = 0;
-  let lastRowHrId = 0;
-  if (currentLastRow > 1) {
-    const [ids] = sheet.getSheetValues(currentLastRow, 1, 1, 2);
-    const [zoneIds] = zoneSheet.getSheetValues(zoneLastRow, 1, 1, 2);
-    [lastRowId] = ids;
-    [lastRowHrId] = zoneIds;
-  }
-  Logger.log('lastRowId');
-  Logger.log(lastRowId);
-  const houseJSON = {
-    ...data,
-    idHouse: +lastRowId + 1,
-    idHr: +lastRowHrId + 1,
-    date: new Date().toString(),
-  };
-  const houseValues = global.jsonToSheetValues(houseJSON, headers);
-  const zoneValues = global.jsonToSheetValues(houseJSON, zoneHeaders);
-  Logger.log('HOUSE VALUES');
-  Logger.log(houseValues);
-
-  sheet.appendRow(houseValues);
-  zoneSheet.appendRow(zoneValues);
-
-  var valueToExtraSheet = [
-    [ houseJSON.idHr,
-      houseJSON.address ]
-  ];
-
-  const extraSheets = new Array(4);
-  extraSheets.push('ACCOUNT RECIEVABLE')
-  extraSheets.push('HANG&FINISH')
-  extraSheets.push('PAINT')
-  extraSheets.push('CLEANNING')
-  extraSheets.forEach(sheetName => {
-    const { sheet: zoneExtraSheet } = getHousesZoneSheet(
-      data.zone, sheetName
-    );
-    Logger.log('zoneExtraSheet');
-    Logger.log(sheetName);
-    Logger.log(zoneExtraSheet);
-    const range = zoneExtraSheet.getRange(zoneLastRow + 1, 1, 1, 2);
-    range.setValues(valueToExtraSheet);
-  })
-
-  const rowsAfter = sheet.getLastRow();
-  const recordInserted = rowsAfter > currentLastRow;
-
-  if (recordInserted) {
-    response.ok = true;
-    response.data = houseJSON;
-  }
-
-  Logger.log('=============END Registering HOUSE===========');
-  return response;
 }
 
 export function registerComment(data) {
@@ -247,7 +114,7 @@ function registerEntity(table, form) {
 
   const entityJson = {
     id: +lastRowId + 1,
-    ...form
+    ...form,
   };
   const entityValues = global.jsonToSheetValues(entityJson, headers);
   Logger.log(`${table} VALUES`);
@@ -264,7 +131,6 @@ function registerEntity(table, form) {
   Logger.log(`=============END Registering ${table}===========`);
   return response;
 }
-
 
 function searchEntity({ name, getEntitySheet, entityId, idGetter }) {
   Logger.log(`=============Searching ${name}===========`);
@@ -298,22 +164,12 @@ function searchEntity({ name, getEntitySheet, entityId, idGetter }) {
   return result;
 }
 
-export function searchComment(idComment) {
-  const result = searchEntity({
-    name: 'Comment',
-    entityId: idComment,
-    getEntitySheet: getCommentsSheet,
-    idGetter: entity => entity.idComment,
-  });
-  return result;
-}
-
-export function searchHouse(idHouse) {
+export function searchProfessor(id) {
   const result = searchEntity({
     name: 'House',
-    entityId: idHouse,
-    getEntitySheet: getHousesSheet,
-    idGetter: entity => entity.idHouse,
+    entityId: id,
+    getEntitySheet: getProfessorsSheet,
+    idGetter: entity => entity.id,
   });
   return result;
 }
@@ -349,24 +205,13 @@ function updateEntity({
   }
 }
 
-export function updateHouse(serializedData) {
+export function updateProfessor(serializedData) {
   const response = updateEntity({
     serializedData,
     name: 'House',
-    findEntity: searchHouse,
-    getEntitySheet: getHousesSheet,
-    idGetter: entity => entity.idHouse,
-  });
-  return response;
-}
-
-export function updateComment(serializedData) {
-  const response = updateEntity({
-    serializedData,
-    name: 'House',
-    findEntity: searchComment,
-    getEntitySheet: getCommentsSheet,
-    idGetter: entity => entity.idComment,
+    findEntity: searchProfessor,
+    getEntitySheet: getProfessorsSheet,
+    idGetter: entity => entity.id,
   });
   return response;
 }
@@ -376,71 +221,19 @@ export function updateComment(serializedData) {
 //   lock.waitLock(15000);
 // }
 
-export function createComment(formString) {
+export function createProfessor(formString) {
   const form = JSON.parse(formString);
   if (!form || !Object.keys(form).length) throw new Error('No data sent');
   try {
     // avoidCollisionsInConcurrentAccessess();
     Logger.log('Data for registering');
     Logger.log(form);
-    const response = registerComment(form);
+    const response = registerEntity('PROFESORES', form);
     Logger.log('Response');
     Logger.log(response);
     return response;
   } catch (error) {
-    Logger.log('Error Registering comment');
-    Logger.log(error);
-    return error.toString();
-  }
-}
-
-export function createModels(formString) {
-  const form = JSON.parse(formString);
-  if (!form || !Object.keys(form).length) throw new Error('No data sent');
-  try {
-    Logger.log('Data for registering');
-    Logger.log(form);
-    const response = registerEntity("MODELS", form);
-    Logger.log('Response');
-    Logger.log(response);
-    return response;
-  } catch (error) {
-    Logger.log('Error Registering model');
-    Logger.log(error);
-    return error.toString();
-  }
-}
-
-export function createBuilders(formString) {
-  const form = JSON.parse(formString);
-  if (!form || !Object.keys(form).length) throw new Error('No data sent');
-  try {
-    Logger.log('Data for registering');
-    Logger.log(form);
-    const response = registerEntity("BUILDERS", form);
-    Logger.log('Response');
-    Logger.log(response);
-    return response;
-  } catch (error) {
-    Logger.log('Error Registering builder');
-    Logger.log(error);
-    return error.toString();
-  }
-}
-
-export function createHouse(formString) {
-  const form = JSON.parse(formString);
-  if (!form || !Object.keys(form).length) throw new Error('No data sent');
-  try {
-    // avoidCollisionsInConcurrentAccessess();
-    Logger.log('Data for registering');
-    Logger.log(form);
-    const response = registerHouse(form);
-    Logger.log('Response');
-    Logger.log(response);
-    return response;
-  } catch (error) {
-    Logger.log('Error Registering Student');
+    Logger.log('Error Registering Professor');
     Logger.log(error);
     return error.toString();
   }
