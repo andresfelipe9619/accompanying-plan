@@ -43,22 +43,10 @@ const devDialogEntry = './dev/index.js';
 // define client entry points and output names
 const clientEntrypoints = [
   {
-    name: 'CLIENT - Dialog Demo',
-    entry: './src/client/dialog-demo/index.js',
-    filename: 'dialog-demo', // we'll add the .html suffix to these
-    template: './src/client/dialog-demo/index.html',
-  },
-  {
-    name: 'CLIENT - Dialog Demo Bootstrap',
-    entry: './src/client/dialog-demo-bootstrap/index.js',
-    filename: 'dialog-demo-bootstrap',
-    template: './src/client/dialog-demo-bootstrap/index.html',
-  },
-  {
-    name: 'CLIENT - Sidebar About Page',
-    entry: './src/client/sidebar-about-page/index.js',
-    filename: 'sidebar-about-page',
-    template: './src/client/sidebar-about-page/index.html',
+    name: 'CLIENT',
+    entry: './src/client/index.js',
+    filename: 'index', // we'll add the .html suffix to these
+    template: './src/client/index.html',
   },
 ];
 
@@ -315,7 +303,6 @@ const serverConfig = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      // replace any env variables in client-side code like PORT and NODE_ENV with actual values
       'process.env': JSON.stringify(envVars),
       'process.env.NODE_ENV': JSON.stringify(
         isProd ? 'production' : 'development'

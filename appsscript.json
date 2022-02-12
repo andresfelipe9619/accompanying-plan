@@ -1,5 +1,5 @@
 {
-  "timeZone": "America/New_York",
+  "timeZone": "America/Indiana/Indianapolis",
   "dependencies": {},
   "exceptionLogging": "STACKDRIVER",
   "oauthScopes": [
