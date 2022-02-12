@@ -1,10 +1,14 @@
 import * as publicSheetFunctions from './utils/sheets';
 import * as publicDriveFunctions from './utils/drive';
 import * as publicMainFunction from './app';
+import onSpreadSheetEdit from './trigger';
 
 // Expose public functions by attaching to `global`
 global.doGet = publicMainFunction.doGet;
 global.doPost = publicMainFunction.doPost;
+
+// TRIGGER FUNCTION
+global.onSpreadSheetEdit = onSpreadSheetEdit;
 
 // BUSINESS LOGIC FUNCTIONS
 global.isAdmin = publicMainFunction.isAdmin;
