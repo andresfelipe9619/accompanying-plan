@@ -6,10 +6,10 @@ import AppRouter from './AppRouter';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#eb1e01',
+      main: '#3366cc',
     },
     secondary: {
-      main: '#a9a9a9',
+      main: '#f42e63',
     },
   },
   typography: {

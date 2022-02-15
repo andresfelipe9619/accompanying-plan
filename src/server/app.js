@@ -53,6 +53,14 @@ export function getProfessors() {
   return getEntityData('PROFESORES');
 }
 
+export function getLines() {
+  return getEntityData('LINEAS');
+}
+
+export function getRoles() {
+  return getEntityData('ROLES');
+}
+
 export function getInstitutions() {
   return getEntityData('INSTITUCIONES EDUCATIVAS');
 }
