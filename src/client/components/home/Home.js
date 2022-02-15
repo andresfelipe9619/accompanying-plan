@@ -10,14 +10,23 @@ import Checkbox from '@material-ui/core/Checkbox';
 import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import FormItem from '../form/FormItem';
-import API from '../../api';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import FolderIcon from '@material-ui/icons/Folder';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import ListSubheader from '@material-ui/core/ListSubheader';
 import useStyles from './styles';
+import API from '../../api';
+import FormItem from '../form/FormItem';
 
 function CustomAccordion({ title, children }) {
   const classes = useStyles();
   return (
-    <Accordion TransitionProps={{ unmountOnExit: true }}>
+    <Accordion
+      TransitionProps={{ unmountOnExit: true }}
+      style={{ width: '100%', margin: 4 }}
+    >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         aria-controls="panel1a-content"
@@ -39,8 +48,13 @@ function Loading() {
   return (
     <div className={classes.loading}>
       <CircularProgress />
+      <b>Cargando Información ...</b>
     </div>
   );
+}
+
+function Empty() {
+  return <b>No hay datos para mostrar</b>;
 }
 
 const map2select = p => ({
@@ -107,6 +121,13 @@ export default function Home() {
       [event.target.name]: event.target.checked,
     });
   };
+
+  function handleListItemClick(item) {
+    return () => {
+      if (!item.url) return;
+      window.open(item.url, '_blank');
+    };
+  }
 
   useEffect(() => {
     (async () => {
@@ -201,17 +222,82 @@ export default function Home() {
           ))}
         </FormGroup>
       </Grid>
-      <Grid item md={12}>
+      <Grid item md={12} container spacing={2}>
         {profesToShow.map(p => (
-          <CustomAccordion key={p.correo} title={p.nombre}>
-            {Array.isArray(p.instituciones)
-              ? p.instituciones.map(i => (
-                  <CustomAccordion key={i.nombre} title={i.nombre}>
-                    {i.snies} - {i.ubicacion}
-                  </CustomAccordion>
+          <Grid item md={12} container spacing={2} key={p.correo}>
+            <CustomAccordion title={p.nombre}>
+              {Array.isArray(p.instituciones) ? (
+                p.instituciones.map(i => (
+                  <Grid
+                    item
+                    xs={12}
+                    key={i.nombre}
+                    md={p.instituciones.length === 1 ? 12 : 6}
+                  >
+                    <CustomAccordion title={i.nombre}>
+                      {!i.folders.length ? (
+                        <Empty />
+                      ) : (
+                        <List
+                          dense
+                          subheader={
+                            <ListSubheader
+                              component="div"
+                              id="folders-list-subheader"
+                            >
+                              Carpetas
+                            </ListSubheader>
+                          }
+                        >
+                          {(i.folders || []).map(f => (
+                            <ListItem
+                              key={f.url}
+                              divider
+                              button
+                              onClick={handleListItemClick(f)}
+                            >
+                              <ListItemIcon>
+                                <FolderIcon />
+                              </ListItemIcon>
+                              <ListItemText primary={f.name} />
+                            </ListItem>
+                          ))}
+                        </List>
+                      )}
+                      {!i.files.length ? (
+                        <Empty />
+                      ) : (
+                        <List
+                          dense
+                          subheader={
+                            <ListSubheader
+                              component="div"
+                              id="files-list-subheader"
+                            >
+                              Archivos
+                            </ListSubheader>
+                          }
+                        >
+                          {(i.files || []).map(f => (
+                            <ListItem
+                              key={f.url}
+                              divider
+                              button
+                              onClick={handleListItemClick(f)}
+                            >
+                              <ListItemText primary={f.name} />
+                            </ListItem>
+                          ))}
+                        </List>
+                      )}
+                    </CustomAccordion>
+                  </Grid>
                 ))
-              : 'No Data'}
-          </CustomAccordion>
+              ) : (
+                <Empty />
+              )}
+            </CustomAccordion>
+          </Grid>
         ))}
       </Grid>
     </Grid>

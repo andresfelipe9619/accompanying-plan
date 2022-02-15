@@ -11,7 +11,7 @@ export default function Navbar() {
 
   return (
     <div className={classes.grow}>
-      <AppBar position="static">
+      <AppBar position="static" color="secondary">
         <Toolbar>
           <Typography
             className={classes.title}

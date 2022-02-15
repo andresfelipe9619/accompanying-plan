@@ -62,7 +62,8 @@ export function getRoles() {
 }
 
 export function getInstitutions() {
-  return getEntityData('INSTITUCIONES EDUCATIVAS');
+  const data = getEntityData('INSTITUCIONES EDUCATIVAS');
+  return data.map(i => ({ ...i, ...global.getInstitutionsFolder(i.url) }));
 }
 
 export function getCommentsSheet() {

@@ -5,9 +5,13 @@ const useStyles = makeStyles(theme => ({
     width: '100%',
   },
   loading: {
+    height: '50vh',
+    flexDirection: 'column',
     display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
     '& > * + *': {
-      marginLeft: theme.spacing(2),
+      margin: theme.spacing(4),
     },
   },
   heading: {

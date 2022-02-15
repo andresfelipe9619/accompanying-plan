@@ -21,12 +21,7 @@ global.updateProfessor = publicMainFunction.updateProfessor;
 global.getInstitutions = publicMainFunction.getInstitutions;
 
 // DRIVE FUNCTIONS
-global.createHouseFile = publicDriveFunctions.createHouseFile;
-global.createHouseCommentFile = publicDriveFunctions.createHouseCommentFile;
-global.uploadHouseCommentsFiles = publicDriveFunctions.uploadHouseCommentsFiles;
-global.uploadHouseFiles = publicDriveFunctions.uploadHouseFiles;
-global.getHouseFolder = publicDriveFunctions.getHouseFolder;
-global.getHouseCommentsFolder = publicDriveFunctions.getHouseCommentsFolder;
+global.getInstitutionsFolder = publicDriveFunctions.getInstitutionsFolder;
 
 // SPREADSHEET FUNCTIONS
 global.getSheetFromSpreadSheet = publicSheetFunctions.getSheetFromSpreadSheet;
