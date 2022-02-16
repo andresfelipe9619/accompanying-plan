@@ -73,7 +73,7 @@ export default function Home() {
   const [professors, setProfessors] = useState([]);
   const [lines, setLines] = useState([]);
   const [roles, setRoles] = useState([]);
-  const [institutions, setInstitutions] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedLines, setSelectedLines] = useState({});
@@ -85,13 +85,13 @@ export default function Home() {
 
   const fetchInstitutions = async () => {
     const response = await API.getInstitutions();
-    setInstitutions(response);
     return response;
   };
 
   const fetchLines = async () => {
     const response = await API.getLines();
     setLines(response);
+    return response;
   };
 
   const fetchRoles = async () => {
@@ -111,8 +111,20 @@ export default function Home() {
     return profs;
   };
 
+  const setProjectAndLines = (project, mlines) => {
+    if (!project) return;
+    setSelectedProject(project);
+    const projectLines = mlines
+      .filter(l => +l.proyecto === +project)
+      .reduce((acc, l) => ({ ...acc, [l.id]: true }), {});
+    console.log('projectLines', projectLines);
+    setSelectedLines(projectLines);
+  };
+
   const handleChangeProject = event => {
-    setSelectedProject(event.target.value);
+    const project = event.target.value;
+    console.log('handleChangeProject', project);
+    setProjectAndLines(project, lines);
   };
 
   const handleChangeLine = event => {
@@ -139,17 +151,20 @@ export default function Home() {
           fetchLines(),
           fetchRoles(),
         ];
-        const [email, profes] = await Promise.all(promises);
+        const [email, profes, linesResponse] = await Promise.all(promises);
         const profe = profes.find(p => p.correo === email);
         if (!profe) return null;
         setCurrentUser(profe);
-        const defaultLines = profe.lineas.reduce(
-          (acc, l) => ({ ...acc, [l]: true }),
-          {}
-        );
-        if (Object.keys(defaultLines).length) {
-          setSelectedLines(defaultLines);
-        }
+        const profeProjects = profe.lineas
+          .map(linea => {
+            const found = linesResponse.find(l => +l.id === +linea);
+            if (!found) return null;
+            return found.proyecto;
+          })
+          .filter(notNull => !!notNull);
+        setProjects(profeProjects);
+        const [first] = profeProjects;
+        setProjectAndLines(first, linesResponse);
       } catch (error) {
         console.error('INIT ERROR: ', error);
       } finally {
@@ -160,31 +175,32 @@ export default function Home() {
   }, []);
 
   if (loading) return <Loading />;
-  console.log('institutions', institutions);
   console.log('professors', professors);
   console.log('currentUser', currentUser);
-  console.log('lines', lines);
   if (!currentUser) return <NoAuthorized />;
 
   const rol = roles.find(r => r.nombre === currentUser.rol);
   if (!rol) return <NoAuthorized />;
 
-  const projects = currentUser.lineas
-    .map(linea => {
-      const found = lines.find(l => +l.id === +linea);
-      if (!found) return null;
-      return found.proyecto;
-    })
-    .filter(notNull => !!notNull);
   console.log('projects', projects);
-  const keys = Object.keys(selectedLines);
-  const profesToShow = professors.filter(p =>
-    p.lineas.some(l => keys.some(k => !!selectedLines[k] && k === l))
-  );
-  console.log('profesToShow', profesToShow);
 
+  const keys = Object.keys(selectedLines);
+  const isAccompanyingProfe = r => r === 'Profesional de acompañamiento';
+  const isLineSelected = l => keys.some(k => !!selectedLines[k] && +k === +l);
+  const filterByLine = p =>
+    isAccompanyingProfe(p.rol) && p.lineas.some(isLineSelected);
+
+  const showOnlyCurrentUser = isAccompanyingProfe(rol.nombre);
+  const profes2Show = showOnlyCurrentUser
+    ? [currentUser]
+    : professors.filter(filterByLine);
+  console.log('profes2Show', profes2Show);
+  const lines2show = (currentUser.lineas || []).filter(ul =>
+    lines.some(l => +l.id === +ul && +selectedProject === +l.proyecto)
+  );
   const projectDependencies = [...new Set(projects)].map(map2select);
   const noop = {};
+  const disabled = loading || projectDependencies.length === 1;
   return (
     <Grid container spacing={2}>
       <Grid item md={6} component={Box} fontWeight="bold">
@@ -197,16 +213,16 @@ export default function Home() {
         item={ProjectFormItem}
         touched={noop}
         errors={noop}
+        isSubmitting={disabled}
         values={{ proyecto: selectedProject }}
         dependencies={{
           proyecto: projectDependencies,
         }}
-        isSubmitting={loading}
         handleChange={handleChangeProject}
       />
       <Grid item md={8}>
         <FormGroup row>
-          {(currentUser.lineas || []).map(l => (
+          {lines2show.map(l => (
             <FormControlLabel
               key={l}
               control={
@@ -222,84 +238,82 @@ export default function Home() {
           ))}
         </FormGroup>
       </Grid>
-      <Grid item md={12} container spacing={2}>
-        {profesToShow.map(p => (
-          <Grid item md={12} container spacing={2} key={p.correo}>
-            <CustomAccordion title={p.nombre}>
+      {profes2Show.map(p => (
+        <Grid item md={12} container spacing={2} key={p.correo}>
+          <CustomAccordion title={p.nombre}>
+            <Box
+              width="100%"
+              display="flex"
+              flexGrow="1"
+              flexDirection="column"
+            >
               {Array.isArray(p.instituciones) ? (
                 p.instituciones.map(i => (
-                  <Grid
-                    item
-                    xs={12}
-                    key={i.nombre}
-                    md={p.instituciones.length === 1 ? 12 : 6}
-                  >
-                    <CustomAccordion title={i.nombre}>
-                      {!i.folders.length ? (
-                        <Empty />
-                      ) : (
-                        <List
-                          dense
-                          subheader={
-                            <ListSubheader
-                              component="div"
-                              id="folders-list-subheader"
-                            >
-                              Carpetas
-                            </ListSubheader>
-                          }
-                        >
-                          {(i.folders || []).map(f => (
-                            <ListItem
-                              key={f.url}
-                              divider
-                              button
-                              onClick={handleListItemClick(f)}
-                            >
-                              <ListItemIcon>
-                                <FolderIcon />
-                              </ListItemIcon>
-                              <ListItemText primary={f.name} />
-                            </ListItem>
-                          ))}
-                        </List>
-                      )}
-                      {!i.files.length ? (
-                        <Empty />
-                      ) : (
-                        <List
-                          dense
-                          subheader={
-                            <ListSubheader
-                              component="div"
-                              id="files-list-subheader"
-                            >
-                              Archivos
-                            </ListSubheader>
-                          }
-                        >
-                          {(i.files || []).map(f => (
-                            <ListItem
-                              key={f.url}
-                              divider
-                              button
-                              onClick={handleListItemClick(f)}
-                            >
-                              <ListItemText primary={f.name} />
-                            </ListItem>
-                          ))}
-                        </List>
-                      )}
-                    </CustomAccordion>
-                  </Grid>
+                  <CustomAccordion title={i.nombre} key={i.nombre}>
+                    {!i.folders.length ? (
+                      <Empty key={i.nombre} />
+                    ) : (
+                      <List
+                        dense
+                        subheader={
+                          <ListSubheader
+                            component="div"
+                            id="folders-list-subheader"
+                          >
+                            Carpetas
+                          </ListSubheader>
+                        }
+                      >
+                        {(i.folders || []).map(f => (
+                          <ListItem
+                            key={f.url}
+                            divider
+                            button
+                            onClick={handleListItemClick(f)}
+                          >
+                            <ListItemIcon>
+                              <FolderIcon />
+                            </ListItemIcon>
+                            <ListItemText primary={f.name} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+                    {!i.files.length ? (
+                      <Empty key={i.nombre} />
+                    ) : (
+                      <List
+                        dense
+                        subheader={
+                          <ListSubheader
+                            component="div"
+                            id="files-list-subheader"
+                          >
+                            Archivos
+                          </ListSubheader>
+                        }
+                      >
+                        {(i.files || []).map(f => (
+                          <ListItem
+                            key={f.url}
+                            divider
+                            button
+                            onClick={handleListItemClick(f)}
+                          >
+                            <ListItemText primary={f.name} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
+                  </CustomAccordion>
                 ))
               ) : (
                 <Empty />
               )}
-            </CustomAccordion>
-          </Grid>
-        ))}
-      </Grid>
+            </Box>
+          </CustomAccordion>
+        </Grid>
+      ))}
     </Grid>
   );
 }

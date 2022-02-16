@@ -5,6 +5,9 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1,
     marginBottom: 20,
   },
+  banner: {
+    width: '100%',
+  },
   title: {
     display: 'none',
     [theme.breakpoints.up('sm')]: {

@@ -66,49 +66,6 @@ export function getInstitutions() {
   return data.map(i => ({ ...i, ...global.getInstitutionsFolder(i.url) }));
 }
 
-export function getCommentsSheet() {
-  const sheet = global.getSheetFromSpreadSheet('COMMENTS');
-  const headers = global.getHeadersFromSheet(sheet);
-  return { sheet, headers };
-}
-
-export function registerComment(data) {
-  Logger.log('=============Registering COMMENT===========');
-  const response = { ok: false, data: null };
-  const { sheet, headers } = getCommentsSheet();
-  const currentLastRow = sheet.getLastRow();
-  let lastRowId = 0;
-  if (currentLastRow > 1) {
-    [lastRowId] = sheet.getSheetValues(currentLastRow, 1, 1, 1);
-  }
-  Logger.log('lastRowId');
-  Logger.log(lastRowId);
-  const timestamp = new Date().toString();
-  const commentJSON = {
-    ...data,
-    user: getCurrentUser(),
-    idComment: +lastRowId + 1,
-    date: timestamp,
-    statusDate: timestamp,
-  };
-  const commentValues = global.jsonToSheetValues(commentJSON, headers);
-  Logger.log('COMMENT VALUES');
-  Logger.log(commentValues);
-
-  sheet.appendRow(commentValues);
-
-  const rowsAfter = sheet.getLastRow();
-  const recordInserted = rowsAfter > currentLastRow;
-
-  if (recordInserted) {
-    response.ok = true;
-    response.data = commentJSON;
-  }
-
-  Logger.log('=============END Registering COMMENT===========');
-  return response;
-}
-
 function registerEntity(table, form) {
   Logger.log(`=============Registering ${table}===========`);
   const response = { ok: false, data: null };
