@@ -19,7 +19,7 @@ global.getRoles = publicMainFunction.getRoles;
 global.createProfessor = publicMainFunction.createProfessor;
 global.updateProfessor = publicMainFunction.updateProfessor;
 global.getInstitutions = publicMainFunction.getInstitutions;
-
+global.getAccompanyingData = publicMainFunction.getAccompanyingData;
 // DRIVE FUNCTIONS
 global.getInstitutionsFolder = publicDriveFunctions.getInstitutionsFolder;
 
