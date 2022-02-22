@@ -1,9 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Accordion from '@material-ui/core/Accordion';
-import AccordionSummary from '@material-ui/core/AccordionSummary';
-import AccordionDetails from '@material-ui/core/AccordionDetails';
-import Typography from '@material-ui/core/Typography';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -19,25 +14,7 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 import useStyles from './styles';
 import API from '../../api';
 import FormItem from '../form/FormItem';
-
-function CustomAccordion({ title, children }) {
-  const classes = useStyles();
-  return (
-    <Accordion
-      TransitionProps={{ unmountOnExit: true }}
-      style={{ width: '100%', margin: 4 }}
-    >
-      <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        aria-controls="panel1a-content"
-        id="panel1a-header"
-      >
-        <Typography className={classes.heading}>{title}</Typography>
-      </AccordionSummary>
-      <AccordionDetails>{children}</AccordionDetails>
-    </Accordion>
-  );
-}
+import CustomAccordion from '../form/CustomAccordion';
 
 function NoAuthorized() {
   return <b>401 NOT AUTHORIZED</b>;
@@ -72,44 +49,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [professors, setProfessors] = useState([]);
   const [lines, setLines] = useState([]);
-  const [roles, setRoles] = useState([]);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedLines, setSelectedLines] = useState({});
-
-  const getCurrentUser = async () => {
-    const email = await API.getCurrentUser();
-    return email;
-  };
-
-  const fetchInstitutions = async () => {
-    const response = await API.getInstitutions();
-    return response;
-  };
-
-  const fetchLines = async () => {
-    const response = await API.getLines();
-    setLines(response);
-    return response;
-  };
-
-  const fetchRoles = async () => {
-    const response = await API.getRoles();
-    setRoles(response);
-  };
-
-  const fetchProfessors = async () => {
-    const response = await API.getProfessors();
-    const insts = await fetchInstitutions();
-    const profs = response.map(p => ({
-      ...p,
-      lineas: p.linea.split(','),
-      instituciones: insts.filter(i => i.profesional === p.correo),
-    }));
-    setProfessors(profs);
-    return profs;
-  };
+  const classes = useStyles();
 
   const setProjectAndLines = (project, mlines) => {
     if (!project) return;
@@ -145,13 +89,15 @@ export default function Home() {
     (async () => {
       try {
         setLoading(true);
-        const promises = [
-          getCurrentUser(),
-          fetchProfessors(),
-          fetchLines(),
-          fetchRoles(),
-        ];
-        const [email, profes, linesResponse] = await Promise.all(promises);
+        const response = await API.getAccompanyingData();
+        console.log('response', response);
+        const [email, profes, linesResponse] = response;
+        if (profes) {
+          setProfessors(profes);
+        }
+        if (linesResponse) {
+          setLines(linesResponse);
+        }
         const profe = profes.find(p => p.correo === email);
         if (!profe) return null;
         setCurrentUser(profe);
@@ -177,11 +123,8 @@ export default function Home() {
   if (loading) return <Loading />;
   console.log('professors', professors);
   console.log('currentUser', currentUser);
-  if (!currentUser) return <NoAuthorized />;
-
-  const rol = roles.find(r => r.nombre === currentUser.rol);
-  if (!rol) return <NoAuthorized />;
-
+  if (!currentUser || !currentUser.rol) return <NoAuthorized />;
+  const { rol, lineas, nombre } = currentUser;
   console.log('projects', projects);
 
   const keys = Object.keys(selectedLines);
@@ -190,12 +133,12 @@ export default function Home() {
   const filterByLine = p =>
     isAccompanyingProfe(p.rol) && p.lineas.some(isLineSelected);
 
-  const showOnlyCurrentUser = isAccompanyingProfe(rol.nombre);
+  const showOnlyCurrentUser = isAccompanyingProfe(rol);
   const profes2Show = showOnlyCurrentUser
     ? [currentUser]
     : professors.filter(filterByLine);
   console.log('profes2Show', profes2Show);
-  const lines2show = (currentUser.lineas || []).filter(ul =>
+  const lines2show = (lineas || []).filter(ul =>
     lines.some(l => +l.id === +ul && +selectedProject === +l.proyecto)
   );
   const projectDependencies = [...new Set(projects)].map(map2select);
@@ -204,10 +147,10 @@ export default function Home() {
   return (
     <Grid container spacing={2}>
       <Grid item md={6} component={Box} fontWeight="bold">
-        Perfil {rol.nombre}
+        Perfil {rol}
       </Grid>
       <Grid item md={6} component={Box} textAlign="right" fontWeight="bold">
-        Usuario: {currentUser.nombre}
+        Usuario: {nombre}
       </Grid>
       <FormItem
         item={ProjectFormItem}
@@ -240,7 +183,7 @@ export default function Home() {
       </Grid>
       {profes2Show.map(p => (
         <Grid item md={12} container spacing={2} key={p.correo}>
-          <CustomAccordion title={p.nombre}>
+          <CustomAccordion classes={classes} title={p.nombre}>
             <Box
               width="100%"
               display="flex"
@@ -249,7 +192,11 @@ export default function Home() {
             >
               {Array.isArray(p.instituciones) ? (
                 p.instituciones.map(i => (
-                  <CustomAccordion title={i.nombre} key={i.nombre}>
+                  <CustomAccordion
+                    classes={classes}
+                    title={i.nombre}
+                    key={i.nombre}
+                  >
                     {!i.folders.length ? (
                       <Empty key={i.nombre} />
                     ) : (

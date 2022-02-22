@@ -66,6 +66,22 @@ export function getInstitutions() {
   return data.map(i => ({ ...i, ...global.getInstitutionsFolder(i.url) }));
 }
 
+export function getAccompanyingData() {
+  const user = getCurrentUser();
+  const lines = getLines();
+  const insts = getInstitutions();
+  let profes = getProfessors();
+
+  profes = profes.map(p => ({
+    ...p,
+    rol: p.rol.split(',')[0],
+    lineas: p.linea.split(','),
+    instituciones: insts.filter(i => i.profesional === p.correo),
+  }));
+  const data = [user, profes, lines];
+  return data;
+}
+
 function registerEntity(table, form) {
   Logger.log(`=============Registering ${table}===========`);
   const response = { ok: false, data: null };
