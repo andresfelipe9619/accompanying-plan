@@ -197,6 +197,32 @@ export default function Home() {
                     title={i.nombre}
                     key={i.nombre}
                   >
+                    {!i.files.length ? (
+                      <Empty key={i.nombre} />
+                    ) : (
+                      <List
+                        dense
+                        subheader={
+                          <ListSubheader
+                            component="div"
+                            id="files-list-subheader"
+                          >
+                            Archivos
+                          </ListSubheader>
+                        }
+                      >
+                        {(i.files || []).map(f => (
+                          <ListItem
+                            key={f.url}
+                            divider
+                            button
+                            onClick={handleListItemClick(f)}
+                          >
+                            <ListItemText primary={f.name} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    )}
                     {!i.folders.length ? (
                       <Empty key={i.nombre} />
                     ) : (
@@ -221,32 +247,6 @@ export default function Home() {
                             <ListItemIcon>
                               <FolderIcon />
                             </ListItemIcon>
-                            <ListItemText primary={f.name} />
-                          </ListItem>
-                        ))}
-                      </List>
-                    )}
-                    {!i.files.length ? (
-                      <Empty key={i.nombre} />
-                    ) : (
-                      <List
-                        dense
-                        subheader={
-                          <ListSubheader
-                            component="div"
-                            id="files-list-subheader"
-                          >
-                            Archivos
-                          </ListSubheader>
-                        }
-                      >
-                        {(i.files || []).map(f => (
-                          <ListItem
-                            key={f.url}
-                            divider
-                            button
-                            onClick={handleListItemClick(f)}
-                          >
                             <ListItemText primary={f.name} />
                           </ListItem>
                         ))}
