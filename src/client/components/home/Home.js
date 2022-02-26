@@ -39,6 +39,10 @@ const map2select = p => ({
   value: p,
 });
 
+const isAccompanyingProfe = r => r.includes('Profesional de acompañamiento');
+
+const noop = {};
+
 const ProjectFormItem = {
   label: 'Proyecto',
   name: 'proyecto',
@@ -121,19 +125,17 @@ export default function Home() {
   }, []);
 
   if (loading) return <Loading />;
-  console.log('professors', professors);
   console.log('currentUser', currentUser);
   if (!currentUser || !currentUser.rol) return <NoAuthorized />;
-  const { rol, lineas, nombre } = currentUser;
-  console.log('projects', projects);
-
+  const { roles = [], lineas, nombre } = currentUser;
   const keys = Object.keys(selectedLines);
-  const isAccompanyingProfe = r => r === 'Profesional de acompañamiento';
+
   const isLineSelected = l => keys.some(k => !!selectedLines[k] && +k === +l);
   const filterByLine = p =>
-    isAccompanyingProfe(p.rol) && p.lineas.some(isLineSelected);
+    isAccompanyingProfe(p.roles) && p.lineas.some(isLineSelected);
 
-  const showOnlyCurrentUser = isAccompanyingProfe(rol);
+  const multiRole = roles.length > 1;
+  const showOnlyCurrentUser = !multiRole && isAccompanyingProfe(roles);
   const profes2Show = showOnlyCurrentUser
     ? [currentUser]
     : professors.filter(filterByLine);
@@ -142,12 +144,12 @@ export default function Home() {
     lines.some(l => +l.id === +ul && +selectedProject === +l.proyecto)
   );
   const projectDependencies = [...new Set(projects)].map(map2select);
-  const noop = {};
   const disabled = loading || projectDependencies.length === 1;
+
   return (
     <Grid container spacing={2}>
       <Grid item md={6} component={Box} fontWeight="bold">
-        Perfil {rol}
+        Perfil {roles.join(', ')}
       </Grid>
       <Grid item md={6} component={Box} textAlign="right" fontWeight="bold">
         Usuario: {nombre}

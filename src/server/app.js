@@ -74,7 +74,7 @@ export function getAccompanyingData() {
 
   profes = profes.map(p => ({
     ...p,
-    rol: p.rol.split(',')[0],
+    roles: p.rol.split(','),
     lineas: p.linea.split(','),
     instituciones: insts.filter(i => i.profesional === p.correo),
   }));
