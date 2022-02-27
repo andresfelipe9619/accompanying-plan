@@ -302,7 +302,7 @@ function ProfessorInput({ error, handleClick }) {
   };
 
   return (
-    <Grid container spacing={2} component={Box} m={2} p={2}>
+    <Grid container spacing={2} component={Box} m={2} p={2} alignItems="center">
       <Grid item md={9}>
         <TextField
           value={email}
@@ -329,11 +329,7 @@ function ProfessorInput({ error, handleClick }) {
   );
 }
 
-const sortAlphabetically = (a, b) => {
-  if (a.name < b.name) return -1;
-  if (a.name > b.name) return 1;
-  return 0;
-};
+const sortAlphabetically = (a, b) => a.name.localeCompare(b.name);
 
 function CustomList({ label, data, handleClick, icon: Icon }) {
   if (!Array.isArray(data) || !data.length) return <Empty />;
