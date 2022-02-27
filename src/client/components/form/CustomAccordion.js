@@ -6,7 +6,12 @@ import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { withStyles } from '@material-ui/core/styles';
 
-export default function CustomAccordion({ title, children, classes }) {
+export default function CustomAccordion({
+  title,
+  children,
+  classes,
+  subtitle,
+}) {
   return (
     <Accordion
       TransitionProps={{ unmountOnExit: true }}
@@ -18,6 +23,11 @@ export default function CustomAccordion({ title, children, classes }) {
         id="panel1a-header"
       >
         <Typography className={classes.heading}>{title}</Typography>
+        {subtitle && (
+          <Typography className={classes.secondaryHeading}>
+            {subtitle}
+          </Typography>
+        )}
       </MuiAccordionSummary>
       <AccordionDetails>{children}</AccordionDetails>
     </Accordion>

@@ -234,7 +234,11 @@ export default function Home() {
       {viewIES &&
         (instituciones || []).map(i => (
           <Grid item md={12} container spacing={2} key={i.nombre}>
-            <CustomAccordion classes={classes} title={i.nombre}>
+            <CustomAccordion
+              classes={classes}
+              title={i.nombre}
+              subtitle={i.nombreProfesional}
+            >
               <Box width="100%" display="flex" flexGrow="1">
                 <CustomList
                   data={i.files}
@@ -267,7 +271,6 @@ export default function Home() {
                       classes={classes}
                       title={i.nombre}
                       key={i.nombre}
-                      subtitle={i.nombreProfesional}
                     >
                       <CustomList
                         data={i.files}
