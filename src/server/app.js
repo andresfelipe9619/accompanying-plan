@@ -76,7 +76,9 @@ export function getAccompanyingData() {
     ...p,
     roles: p.rol.split(','),
     lineas: p.linea.split(','),
-    instituciones: insts.filter(i => i.profesional === p.correo),
+    instituciones: insts
+      .filter(i => i.profesional === p.correo)
+      .map(i => ({ ...i, nombreProfesional: p.nombre })),
   }));
   const data = [user, profes, lines];
   return data;

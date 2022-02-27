@@ -11,10 +11,13 @@ import FolderIcon from '@material-ui/icons/Folder';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+import Switch from '@material-ui/core/Switch';
 import useStyles from './styles';
 import API from '../../api';
 import FormItem from '../form/FormItem';
-import CustomAccordion from '../form/CustomAccordion';
+import CustomAccordion, { GreyAccordion } from '../form/CustomAccordion';
 
 function NoAuthorized() {
   return <b>401 NOT AUTHORIZED</b>;
@@ -57,6 +60,8 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedLines, setSelectedLines] = useState({});
+  const [appError, setAppError] = useState(null);
+  const [viewIES, setViewIES] = useState(false);
   const classes = useStyles();
 
   const setProjectAndLines = (project, mlines) => {
@@ -89,6 +94,25 @@ export default function Home() {
     };
   }
 
+  function handleViewIES(e) {
+    setViewIES(e.target.checked);
+  }
+
+  function getProfe(email, profes) {
+    const profe = profes.find(p => p.correo === email);
+    return profe;
+  }
+
+  function handleProfessorInput(email) {
+    return () => {
+      setAppError(null);
+      if (!email) return setAppError('Ingrese un Email valido');
+      const found = getProfe(email, professors);
+      if (!found) return setAppError('Usuario No Encontrado');
+      return setCurrentUser(found);
+    };
+  }
+
   useEffect(() => {
     (async () => {
       try {
@@ -102,19 +126,9 @@ export default function Home() {
         if (linesResponse) {
           setLines(linesResponse);
         }
-        const profe = profes.find(p => p.correo === email);
+        const profe = getProfe(email, profes);
         if (!profe) return null;
         setCurrentUser(profe);
-        const profeProjects = profe.lineas
-          .map(linea => {
-            const found = linesResponse.find(l => +l.id === +linea);
-            if (!found) return null;
-            return found.proyecto;
-          })
-          .filter(notNull => !!notNull);
-        setProjects(profeProjects);
-        const [first] = profeProjects;
-        setProjectAndLines(first, linesResponse);
       } catch (error) {
         console.error('INIT ERROR: ', error);
       } finally {
@@ -124,9 +138,29 @@ export default function Home() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (!currentUser || !(lines || []).length) return;
+    const profeProjects = currentUser.lineas
+      .map(linea => {
+        const found = lines.find(l => +l.id === +linea);
+        if (!found) return null;
+        return found.proyecto;
+      })
+      .filter(notNull => !!notNull);
+    setProjects(profeProjects);
+    const [first] = profeProjects;
+    setProjectAndLines(first, lines);
+  }, [currentUser, lines]);
+
   if (loading) return <Loading />;
   console.log('currentUser', currentUser);
-  if (!currentUser || !currentUser.rol) return <NoAuthorized />;
+  if (!currentUser) {
+    return (
+      <ProfessorInput handleClick={handleProfessorInput} error={appError} />
+    );
+  }
+
+  if (!currentUser.rol) return <NoAuthorized />;
   const { roles = [], lineas, nombre } = currentUser;
   const keys = Object.keys(selectedLines);
 
@@ -145,6 +179,7 @@ export default function Home() {
   );
   const projectDependencies = [...new Set(projects)].map(map2select);
   const disabled = loading || projectDependencies.length === 1;
+  const instituciones = profes2Show.map(p => p.instituciones).flatMap(f => f);
 
   return (
     <Grid container spacing={2}>
@@ -183,86 +218,147 @@ export default function Home() {
           ))}
         </FormGroup>
       </Grid>
-      {profes2Show.map(p => (
-        <Grid item md={12} container spacing={2} key={p.correo}>
-          <CustomAccordion classes={classes} title={p.nombre}>
-            <Box
-              width="100%"
-              display="flex"
-              flexGrow="1"
-              flexDirection="column"
-            >
-              {Array.isArray(p.instituciones) ? (
-                p.instituciones.map(i => (
-                  <CustomAccordion
-                    classes={classes}
-                    title={i.nombre}
-                    key={i.nombre}
-                  >
-                    {!i.files.length ? (
-                      <Empty key={i.nombre} />
-                    ) : (
-                      <List
-                        dense
-                        subheader={
-                          <ListSubheader
-                            component="div"
-                            id="files-list-subheader"
-                          >
-                            Archivos
-                          </ListSubheader>
-                        }
-                      >
-                        {(i.files || []).map(f => (
-                          <ListItem
-                            key={f.url}
-                            divider
-                            button
-                            onClick={handleListItemClick(f)}
-                          >
-                            <ListItemText primary={f.name} />
-                          </ListItem>
-                        ))}
-                      </List>
-                    )}
-                    {!i.folders.length ? (
-                      <Empty key={i.nombre} />
-                    ) : (
-                      <List
-                        dense
-                        subheader={
-                          <ListSubheader
-                            component="div"
-                            id="folders-list-subheader"
-                          >
-                            Carpetas
-                          </ListSubheader>
-                        }
-                      >
-                        {(i.folders || []).map(f => (
-                          <ListItem
-                            key={f.url}
-                            divider
-                            button
-                            onClick={handleListItemClick(f)}
-                          >
-                            <ListItemIcon>
-                              <FolderIcon />
-                            </ListItemIcon>
-                            <ListItemText primary={f.name} />
-                          </ListItem>
-                        ))}
-                      </List>
-                    )}
-                  </CustomAccordion>
-                ))
-              ) : (
-                <Empty />
-              )}
-            </Box>
-          </CustomAccordion>
-        </Grid>
-      ))}
+      <Grid item container md={12} justifyContent="flex-end" spacing={0}>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={viewIES}
+              onChange={handleViewIES}
+              name="viewIES"
+              color="primary"
+            />
+          }
+          label="Ver sólo IES"
+        />
+      </Grid>
+      {viewIES &&
+        (instituciones || []).map(i => (
+          <Grid item md={12} container spacing={2} key={i.nombre}>
+            <CustomAccordion classes={classes} title={i.nombre}>
+              <Box width="100%" display="flex" flexGrow="1">
+                <CustomList
+                  data={i.files}
+                  label="Archivos"
+                  handleClick={handleListItemClick}
+                />
+                <CustomList
+                  data={i.folders}
+                  label="Carpetas"
+                  icon={FolderIcon}
+                  handleClick={handleListItemClick}
+                />
+              </Box>
+            </CustomAccordion>
+          </Grid>
+        ))}
+      {!viewIES &&
+        profes2Show.map(p => (
+          <Grid item md={12} container spacing={2} key={p.correo}>
+            <CustomAccordion classes={classes} title={p.nombre}>
+              <Box
+                width="100%"
+                display="flex"
+                flexGrow="1"
+                flexDirection="column"
+              >
+                {Array.isArray(p.instituciones) ? (
+                  p.instituciones.map(i => (
+                    <GreyAccordion
+                      classes={classes}
+                      title={i.nombre}
+                      key={i.nombre}
+                      subtitle={i.nombreProfesional}
+                    >
+                      <CustomList
+                        data={i.files}
+                        label="Archivos"
+                        handleClick={handleListItemClick}
+                      />
+                      <CustomList
+                        data={i.folders}
+                        label="Carpetas"
+                        icon={FolderIcon}
+                        handleClick={handleListItemClick}
+                      />
+                    </GreyAccordion>
+                  ))
+                ) : (
+                  <Empty />
+                )}
+              </Box>
+            </CustomAccordion>
+          </Grid>
+        ))}
     </Grid>
+  );
+}
+
+function ProfessorInput({ error, handleClick }) {
+  const [email, setEmail] = useState('');
+
+  const handleChange = e => {
+    const { value } = e.target;
+    setEmail(value);
+  };
+
+  return (
+    <Grid container spacing={2} component={Box} m={2} p={2}>
+      <Grid item md={9}>
+        <TextField
+          value={email}
+          label="Email"
+          type="email"
+          fullWidth
+          id="email-search"
+          variant="outlined"
+          error={!!error}
+          helperText={error}
+          onChange={handleChange}
+        />
+      </Grid>
+      <Grid item md={3}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleClick(email)}
+        >
+          Entrar
+        </Button>
+      </Grid>
+    </Grid>
+  );
+}
+
+const sortAlphabetically = (a, b) => {
+  if (a.name < b.name) return -1;
+  if (a.name > b.name) return 1;
+  return 0;
+};
+
+function CustomList({ label, data, handleClick, icon: Icon }) {
+  if (!Array.isArray(data) || !data.length) return <Empty />;
+  return (
+    <List
+      dense
+      subheader={
+        <ListSubheader
+          component="div"
+          id={`${label.toLowerCase()}-list-subheader`}
+        >
+          {label}
+        </ListSubheader>
+      }
+    >
+      {data.sort(sortAlphabetically).map(f => (
+        <ListItem key={f.url} divider button onClick={handleClick(f)}>
+          {Icon && (
+            <ListItemIcon>
+              <Icon />
+            </ListItemIcon>
+          )}
+          <ListItemText primary={f.name} />
+        </ListItem>
+      ))}
+    </List>
   );
 }

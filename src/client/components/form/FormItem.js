@@ -116,6 +116,7 @@ export default function FormItem(props) {
           name={key}
           disabled={isSubmitting}
           value={value || ''}
+          label={item.label}
           onChange={handleChange}
         >
           {options.map(d => (
