@@ -1,17 +1,4 @@
 export const getCurrentUser = () => Session.getActiveUser().getEmail();
-export function isAdmin() {
-  const guessEmail = getCurrentUser();
-  const admins = [
-    'suarez.andres@correounivalle.edu.co',
-    'samuel.ramirez@correounivalle.edu.co',
-  ];
-  Logger.log('guessEmail');
-  Logger.log(guessEmail);
-  const isGuessAdmin = admins.indexOf(String(guessEmail)) >= 0;
-  Logger.log(isGuessAdmin);
-
-  return isGuessAdmin;
-}
 
 function createHtmlTemplate(filename) {
   return HtmlService.createHtmlOutputFromFile(filename)

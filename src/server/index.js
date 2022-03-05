@@ -11,7 +11,6 @@ global.doPost = publicMainFunction.doPost;
 global.onSpreadSheetEdit = onSpreadSheetEdit;
 
 // BUSINESS LOGIC FUNCTIONS
-global.isAdmin = publicMainFunction.isAdmin;
 global.getCurrentUser = publicMainFunction.getCurrentUser;
 global.getProfessors = publicMainFunction.getProfessors;
 global.getLines = publicMainFunction.getLines;
