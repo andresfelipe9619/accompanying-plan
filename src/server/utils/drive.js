@@ -4,23 +4,23 @@ export function getIdFromUrl(url) {
 }
 
 export function getInstitutionsFolder(url) {
+  const data = { files: [], folders: [], url };
+  if (!url) return data;
   const id = getIdFromUrl(url);
   const folder = DriveApp.getFolderById(id);
   const driveFiles = folder.getFiles();
   const driveFolders = folder.getFolders();
-  const files = [];
-  const folders = [];
   while (driveFolders.hasNext()) {
     const child = driveFolders.next();
-    folders.push({ name: child.getName(), url: child.getUrl() });
+    data.folders.push({ name: child.getName(), url: child.getUrl() });
   }
   while (driveFiles.hasNext()) {
     const child = driveFiles.next();
-    files.push({
+    data.files.push({
       name: child.getName(),
       url: child.getUrl(),
       type: child.getMimeType(),
     });
   }
-  return { url, files, folders };
+  return data;
 }
