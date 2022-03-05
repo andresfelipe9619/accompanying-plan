@@ -268,7 +268,7 @@ export default function Home() {
       {!viewIES &&
         profes2Show.map(profe => {
           const isArray = Array.isArray(profe.instituciones);
-          const hasInstitutions = isArray && !!profe.length;
+          const hasInstitutions = isArray && !!profe.instituciones.length;
           if (!hasInstitutions) return <Empty />;
 
           return (

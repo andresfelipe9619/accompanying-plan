@@ -31,7 +31,8 @@ export function getInstitutionsFolder(url) {
     };
     if (file.name === '03 - Programación de acompañamiento') {
       const [trafficLight] = getTrafficLight(file);
-      file.pendingMinutes = trafficLight || 0;
+      const [pendingMinutes] = trafficLight || 0;
+      file.pendingMinutes = pendingMinutes;
     }
     data.files.push(file);
   }
