@@ -14,10 +14,14 @@ import ListSubheader from '@material-ui/core/ListSubheader';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Switch from '@material-ui/core/Switch';
+import { isNaN } from 'formik';
 import useStyles from './styles';
 import API from '../../api';
 import FormItem from '../form/FormItem';
-import CustomAccordion, { GreyAccordion } from '../form/CustomAccordion';
+import CustomAccordion from '../form/CustomAccordion';
+
+const PENDING_MINUTES_COLOR = '#dd7e6b';
+const DEFAULT_INS_COLOR = 'rgba(0, 0, 0, .03)';
 
 function NoAuthorized() {
   return <b>401 NOT AUTHORIZED</b>;
@@ -36,6 +40,12 @@ function Loading() {
 function Empty() {
   return <b>No hay datos para mostrar</b>;
 }
+
+const hasPendingMinutes = i =>
+  i.files.some(f => !isNaN(f.pendingMinutes) && f.pendingMinutes > 0);
+
+const getAlertColor = ins =>
+  ins.some(hasPendingMinutes) ? PENDING_MINUTES_COLOR : 'inherit';
 
 const map2select = p => ({
   label: p,
@@ -256,18 +266,27 @@ export default function Home() {
           </Grid>
         ))}
       {!viewIES &&
-        profes2Show.map(p => (
-          <Grid item md={12} container spacing={2} key={p.correo}>
-            <CustomAccordion classes={classes} title={p.nombre}>
-              <Box
-                width="100%"
-                display="flex"
-                flexGrow="1"
-                flexDirection="column"
+        profes2Show.map(profe => {
+          const isArray = Array.isArray(profe.instituciones);
+          const hasInstitutions = isArray && !!profe.length;
+          if (!hasInstitutions) return <Empty />;
+
+          return (
+            <Grid item md={12} container spacing={2} key={profe.correo}>
+              <CustomAccordion
+                classes={classes}
+                title={profe.nombre}
+                color={getAlertColor(profe.instituciones)}
               >
-                {Array.isArray(p.instituciones) ? (
-                  p.instituciones.map(i => (
-                    <GreyAccordion
+                <Box
+                  width="100%"
+                  display="flex"
+                  flexGrow="1"
+                  flexDirection="column"
+                >
+                  {profe.instituciones.map(i => (
+                    <CustomAccordion
+                      color={getAlertColor([i])}
                       classes={classes}
                       title={i.nombre}
                       key={i.nombre}
@@ -283,15 +302,13 @@ export default function Home() {
                         icon={FolderIcon}
                         handleClick={handleListItemClick}
                       />
-                    </GreyAccordion>
-                  ))
-                ) : (
-                  <Empty />
-                )}
-              </Box>
-            </CustomAccordion>
-          </Grid>
-        ))}
+                    </CustomAccordion>
+                  ))}
+                </Box>
+              </CustomAccordion>
+            </Grid>
+          );
+        })}
     </Grid>
   );
 }

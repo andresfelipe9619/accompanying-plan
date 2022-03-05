@@ -9,6 +9,7 @@ import { withStyles } from '@material-ui/core/styles';
 export default function CustomAccordion({
   title,
   children,
+  color,
   classes,
   subtitle,
 }) {
@@ -17,31 +18,8 @@ export default function CustomAccordion({
       TransitionProps={{ unmountOnExit: true }}
       style={{ width: '100%', margin: 4 }}
     >
-      <MuiAccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        aria-controls="panel1a-content"
-        id="panel1a-header"
-      >
-        <Typography className={classes.heading}>{title}</Typography>
-        {subtitle && (
-          <Typography className={classes.secondaryHeading}>
-            {subtitle}
-          </Typography>
-        )}
-      </MuiAccordionSummary>
-      <AccordionDetails>{children}</AccordionDetails>
-    </Accordion>
-  );
-}
-
-export function GreyAccordion({ title, children, classes, subtitle }) {
-  return (
-    <Accordion
-      elevation={0}
-      TransitionProps={{ unmountOnExit: true }}
-      style={{ width: '100%', margin: 4 }}
-    >
       <AccordionSummary
+        color={color}
         expandIcon={<ExpandMoreIcon />}
         aria-controls="panel1a-content"
         id="panel1a-header"
@@ -60,6 +38,6 @@ export function GreyAccordion({ title, children, classes, subtitle }) {
 
 const AccordionSummary = withStyles({
   root: {
-    backgroundColor: 'rgba(0, 0, 0, .03)',
+    backgroundColor: color => color || 'inherit',
   },
 })(MuiAccordionSummary);

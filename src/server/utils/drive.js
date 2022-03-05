@@ -3,24 +3,37 @@ export function getIdFromUrl(url) {
   return id;
 }
 
+function getTrafficLight(file) {
+  if (!file || !file.url) return [];
+  const sheet = global.getSheetFromSpreadSheet('Semáforo', file.url);
+  return sheet.getSheetValues(1, 10, 1, 1);
+}
+
 export function getInstitutionsFolder(url) {
   const data = { files: [], folders: [], url };
   if (!url) return data;
   const id = getIdFromUrl(url);
-  const folder = DriveApp.getFolderById(id);
-  const driveFiles = folder.getFiles();
-  const driveFolders = folder.getFolders();
+  const rootFolder = DriveApp.getFolderById(id);
+  const driveFiles = rootFolder.getFiles();
+  const driveFolders = rootFolder.getFolders();
+
   while (driveFolders.hasNext()) {
     const child = driveFolders.next();
-    data.folders.push({ name: child.getName(), url: child.getUrl() });
+    const folder = { name: child.getName(), url: child.getUrl() };
+    data.folders.push(folder);
   }
   while (driveFiles.hasNext()) {
     const child = driveFiles.next();
-    data.files.push({
+    const file = {
       name: child.getName(),
       url: child.getUrl(),
       type: child.getMimeType(),
-    });
+    };
+    if (file.name === '03 - Programación de acompañamiento') {
+      const [trafficLight] = getTrafficLight(file);
+      file.pendingMinutes = trafficLight || 0;
+    }
+    data.files.push(file);
   }
   return data;
 }
