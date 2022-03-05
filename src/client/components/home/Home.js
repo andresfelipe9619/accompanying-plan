@@ -44,8 +44,10 @@ function Empty() {
 const hasPendingMinutes = i =>
   i.files.some(f => !isNaN(f.pendingMinutes) && f.pendingMinutes > 0);
 
-const getAlertColor = ins =>
-  ins.some(hasPendingMinutes) ? PENDING_MINUTES_COLOR : 'inherit';
+const getAlertColor = (ins, isGrey) => {
+  if (ins.some(hasPendingMinutes)) return PENDING_MINUTES_COLOR;
+  return isGrey ? DEFAULT_INS_COLOR : 'inherit';
+};
 
 const map2select = p => ({
   label: p,
@@ -247,6 +249,7 @@ export default function Home() {
             <CustomAccordion
               classes={classes}
               title={i.nombre}
+              color={getAlertColor(instituciones, true)}
               subtitle={i.nombreProfesional}
             >
               <Box width="100%" display="flex" flexGrow="1">
@@ -286,7 +289,7 @@ export default function Home() {
                 >
                   {profe.instituciones.map(i => (
                     <CustomAccordion
-                      color={getAlertColor([i])}
+                      color={getAlertColor([i], true)}
                       classes={classes}
                       title={i.nombre}
                       key={i.nombre}
