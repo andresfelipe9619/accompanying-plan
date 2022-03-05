@@ -132,14 +132,13 @@ export default function Home() {
         const response = await API.getAccompanyingData();
         console.log('response', response);
         const [email, profes, linesResponse] = response;
-        if (profes) {
-          setProfessors(profes);
-        }
-        if (linesResponse) {
-          setLines(linesResponse);
-        }
+
+        if (profes) setProfessors(profes);
+        if (linesResponse) setLines(linesResponse);
+
         const profe = getProfe(email, profes);
         if (!profe) return null;
+
         setCurrentUser(profe);
       } catch (error) {
         console.error('INIT ERROR: ', error);

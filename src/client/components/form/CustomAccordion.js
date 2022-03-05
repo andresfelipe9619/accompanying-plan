@@ -38,6 +38,6 @@ export default function CustomAccordion({
 
 const AccordionSummary = withStyles({
   root: {
-    backgroundColor: color => color || 'inherit',
+    backgroundColor: ({ color }) => color || 'inherit',
   },
 })(MuiAccordionSummary);
