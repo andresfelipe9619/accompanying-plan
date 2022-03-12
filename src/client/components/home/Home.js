@@ -21,16 +21,16 @@ import FormItem from '../form/FormItem';
 import CustomAccordion from '../form/CustomAccordion';
 
 const PENDING_MINUTES_COLOR = '#dd7e6b';
-const DEFAULT_INS_COLOR = 'rgba(0, 0, 0, .03)';
+const DEFAULT_INS_COLOR = 'rgb(85, 85, 85, 0.7)';
 
 function NoAuthorized() {
   return <b>401 NOT AUTHORIZED</b>;
 }
 
-function Loading() {
+function Loading({ useClass = true }) {
   const classes = useStyles();
   return (
-    <div className={classes.loading}>
+    <div className={useClass ? classes.loading : ''}>
       <CircularProgress />
       <b>Cargando Información ...</b>
     </div>
@@ -42,7 +42,7 @@ function Empty() {
 }
 
 const hasPendingMinutes = i =>
-  i.files.some(f => !isNaN(f.pendingMinutes) && f.pendingMinutes > 0);
+  (i?.files || []).some(f => !isNaN(f.pendingMinutes) && f.pendingMinutes > 0);
 
 const getAlertColor = (ins, isGrey) => {
   if (ins.some(hasPendingMinutes)) return PENDING_MINUTES_COLOR;
@@ -65,7 +65,7 @@ const ProjectFormItem = {
 };
 
 export default function Home() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [professors, setProfessors] = useState([]);
   const [lines, setLines] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -74,6 +74,7 @@ export default function Home() {
   const [selectedLines, setSelectedLines] = useState({});
   const [appError, setAppError] = useState(null);
   const [viewIES, setViewIES] = useState(false);
+  const [institutionsFolders, setInstitutionsFolders] = useState({});
   const classes = useStyles();
 
   const setProjectAndLines = (project, mlines) => {
@@ -125,25 +126,45 @@ export default function Home() {
     };
   }
 
+  function fetchInstitutionsFolder(insts) {
+    const promises = insts.map(async i => {
+      try {
+        setInstitutionsFolders(prev => ({
+          ...prev,
+          [i.nombre]: { loading: true },
+        }));
+        const data = await API.getInstitutionsFolder(i.url);
+        setInstitutionsFolders(prev => ({
+          ...prev,
+          [i.nombre]: { data, loading: false },
+        }));
+      } catch (error) {
+        setInstitutionsFolders(prev => ({
+          ...prev,
+          [i.nombre]: { loading: false },
+        }));
+      }
+    });
+    return Promise.all(promises);
+  }
+
   useEffect(() => {
     (async () => {
       try {
-        setLoading(true);
         const response = await API.getAccompanyingData();
         console.log('response', response);
-        const [email, profes, linesResponse] = response;
+        const [email, profes, linesResponse, insts] = response;
 
         if (profes) setProfessors(profes);
         if (linesResponse) setLines(linesResponse);
 
         const profe = getProfe(email, profes);
-        if (!profe) return null;
-
-        setCurrentUser(profe);
-      } catch (error) {
-        console.error('INIT ERROR: ', error);
-      } finally {
+        if (profe) setCurrentUser(profe);
         setLoading(false);
+        await fetchInstitutionsFolder(insts);
+      } catch (error) {
+        setLoading(false);
+        console.error('INIT ERROR: ', error);
       }
       return null;
     })();
@@ -175,9 +196,10 @@ export default function Home() {
   const { roles = [], lineas, nombre } = currentUser;
   const keys = Object.keys(selectedLines);
 
-  const isLineSelected = l => keys.some(k => !!selectedLines[k] && +k === +l);
+  const isLineSelected = l =>
+    (keys || []).some(k => !!selectedLines[k] && +k === +l);
   const filterByLine = p =>
-    isAccompanyingProfe(p.roles) && p.lineas.some(isLineSelected);
+    isAccompanyingProfe(p.roles) && (p.lineas || []).some(isLineSelected);
 
   const multiRole = roles.length > 1;
   const showOnlyCurrentUser = !multiRole && isAccompanyingProfe(roles);
@@ -186,7 +208,7 @@ export default function Home() {
     : professors.filter(filterByLine);
   console.log('profes2Show', profes2Show);
   const lines2show = (lineas || []).filter(ul =>
-    lines.some(l => +l.id === +ul && +selectedProject === +l.proyecto)
+    (lines || []).some(l => +l.id === +ul && +selectedProject === +l.proyecto)
   );
   const projectDependencies = [...new Set(projects)].map(map2select);
   const disabled = loading || projectDependencies.length === 1;
@@ -243,30 +265,38 @@ export default function Home() {
         />
       </Grid>
       {viewIES &&
-        (instituciones || []).map(i => (
-          <Grid item md={12} container spacing={2} key={i.nombre}>
-            <CustomAccordion
-              classes={classes}
-              title={i.nombre}
-              color={getAlertColor(instituciones, true)}
-              subtitle={i.nombreProfesional}
-            >
-              <Box width="100%" display="flex" flexGrow="1">
-                <CustomList
-                  data={i.files}
-                  label="Archivos"
-                  handleClick={handleListItemClick}
-                />
-                <CustomList
-                  data={i.folders}
-                  label="Carpetas"
-                  icon={FolderIcon}
-                  handleClick={handleListItemClick}
-                />
-              </Box>
-            </CustomAccordion>
-          </Grid>
-        ))}
+        (instituciones || []).map(i => {
+          const instFolder = institutionsFolders[i.nombre] || {};
+          const { data, loading: loadingInstitution } = instFolder;
+          return (
+            <Grid item md={12} container spacing={2} key={i.nombre}>
+              <CustomAccordion
+                classes={classes}
+                title={i.nombre}
+                loading={loadingInstitution}
+                color={getAlertColor([i], true)}
+                subtitle={i.nombreProfesional}
+              >
+                {loadingInstitution && <Loading useClass={false} />}
+                {!!data && !loadingInstitution && (
+                  <Box width="100%" display="flex" flexGrow="1">
+                    <CustomList
+                      data={data?.files}
+                      label="Archivos"
+                      handleClick={handleListItemClick}
+                    />
+                    <CustomList
+                      data={data?.folders}
+                      label="Carpetas"
+                      icon={FolderIcon}
+                      handleClick={handleListItemClick}
+                    />
+                  </Box>
+                )}
+              </CustomAccordion>
+            </Grid>
+          );
+        })}
       {!viewIES &&
         profes2Show.map(profe => {
           const isArray = Array.isArray(profe.instituciones);
@@ -286,26 +316,36 @@ export default function Home() {
                   flexGrow="1"
                   flexDirection="column"
                 >
-                  {profe.instituciones.map(i => (
-                    <CustomAccordion
-                      color={getAlertColor([i], true)}
-                      classes={classes}
-                      title={i.nombre}
-                      key={i.nombre}
-                    >
-                      <CustomList
-                        data={i.files}
-                        label="Archivos"
-                        handleClick={handleListItemClick}
-                      />
-                      <CustomList
-                        data={i.folders}
-                        label="Carpetas"
-                        icon={FolderIcon}
-                        handleClick={handleListItemClick}
-                      />
-                    </CustomAccordion>
-                  ))}
+                  {profe.instituciones.map(i => {
+                    const instFolder = institutionsFolders[i.nombre] || {};
+                    const { data, loading: loadingInstitution } = instFolder;
+                    return (
+                      <CustomAccordion
+                        loading={loadingInstitution}
+                        color={getAlertColor([i], true)}
+                        classes={classes}
+                        title={i.nombre}
+                        key={i.nombre}
+                      >
+                        {loadingInstitution && <Loading useClass={false} />}
+                        {!!data && !loadingInstitution && (
+                          <Box width="100%" display="flex" flexGrow="1">
+                            <CustomList
+                              data={data.files}
+                              label="Archivos"
+                              handleClick={handleListItemClick}
+                            />
+                            <CustomList
+                              data={data.folders}
+                              label="Carpetas"
+                              icon={FolderIcon}
+                              handleClick={handleListItemClick}
+                            />
+                          </Box>
+                        )}
+                      </CustomAccordion>
+                    );
+                  })}
                 </Box>
               </CustomAccordion>
             </Grid>

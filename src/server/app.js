@@ -49,16 +49,22 @@ export function getRoles() {
 }
 
 export function getInstitutions() {
-  const data = getEntityData('INSTITUCIONES EDUCATIVAS');
-  return data.map(i => ({ ...i, ...global.getInstitutionsFolder(i.url) }));
+  return getEntityData('INSTITUCIONES EDUCATIVAS');
 }
 
 export function getAccompanyingData() {
   const user = getCurrentUser();
+  Logger.log('user');
+  Logger.log(user);
   const lines = getLines();
+  Logger.log('lines');
+  Logger.log(lines);
   const insts = getInstitutions();
+  Logger.log('insts');
+  Logger.log(insts);
   let profes = getProfessors();
-
+  Logger.log('profes');
+  Logger.log(profes);
   profes = profes.map(p => ({
     ...p,
     roles: p.rol.split(','),
@@ -67,7 +73,7 @@ export function getAccompanyingData() {
       .filter(i => i.profesional === p.correo)
       .map(i => ({ ...i, nombreProfesional: p.nombre })),
   }));
-  const data = [user, profes, lines];
+  const data = [user, profes, lines, insts];
   return data;
 }
 

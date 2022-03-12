@@ -5,11 +5,13 @@ import AccordionDetails from '@material-ui/core/AccordionDetails';
 import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { withStyles } from '@material-ui/core/styles';
+import CircularProgress from '@material-ui/core/CircularProgress';
 
 export default function CustomAccordion({
   title,
   children,
   color,
+  loading,
   classes,
   subtitle,
 }) {
@@ -24,6 +26,7 @@ export default function CustomAccordion({
         aria-controls="panel1a-content"
         id="panel1a-header"
       >
+        {!!loading && <CircularProgress />}
         <Typography className={classes.heading}>{title}</Typography>
         {subtitle && (
           <Typography className={classes.secondaryHeading}>
