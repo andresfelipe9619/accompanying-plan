@@ -133,7 +133,7 @@ export default function Home() {
           ...prev,
           [i.nombre]: { loading: true },
         }));
-        const data = await API.getInstitutionsFolder(i.url);
+        const data = await API.getInstitutionsFolder(i);
         setInstitutionsFolders(prev => ({
           ...prev,
           [i.nombre]: { data, loading: false },

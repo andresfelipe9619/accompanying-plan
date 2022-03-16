@@ -9,7 +9,8 @@ function getTrafficLight(file) {
   return sheet.getSheetValues(1, 10, 1, 1);
 }
 
-export function getInstitutionsFolder(url) {
+export function getInstitutionsFolder(institution) {
+  const { url, snies } = institution;
   const data = { files: [], folders: [], url };
   if (!url) return data;
   const id = getIdFromUrl(url);
@@ -29,7 +30,8 @@ export function getInstitutionsFolder(url) {
       url: child.getUrl(),
       type: child.getMimeType(),
     };
-    if (file.name === '03 - Programación de acompañamiento') {
+    const trafficLightSheet = `${snies} - 03 - Programación de acompañamiento`;
+    if (file.name === trafficLightSheet) {
       const [trafficLight] = getTrafficLight(file);
       const [pendingMinutes] = trafficLight || 0;
       file.pendingMinutes = pendingMinutes;
