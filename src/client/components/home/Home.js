@@ -55,6 +55,7 @@ const map2select = p => ({
 });
 
 const isAccompanyingProfe = r => r.includes('Profesional de acompañamiento');
+const isSuperAdmin = r => r.includes('Alta dirección');
 
 const noop = {};
 
@@ -213,7 +214,8 @@ export default function Home() {
   const projectDependencies = [...new Set(projects)].map(map2select);
   const disabled = loading || projectDependencies.length === 1;
   const instituciones = profes2Show.map(p => p.instituciones).flatMap(f => f);
-
+  const isAdmin = isSuperAdmin(roles);
+  console.log('institutionsFolders', institutionsFolders);
   return (
     <Grid container spacing={2}>
       <Grid item md={6} component={Box} fontWeight="bold">
@@ -274,7 +276,7 @@ export default function Home() {
                 classes={classes}
                 title={i.nombre}
                 loading={loadingInstitution}
-                color={getAlertColor([i], true)}
+                color={getAlertColor([data], true)}
                 subtitle={i.nombreProfesional}
               >
                 {loadingInstitution && <Loading useClass={false} />}
@@ -301,14 +303,23 @@ export default function Home() {
         profes2Show.map(profe => {
           const isArray = Array.isArray(profe.instituciones);
           const hasInstitutions = isArray && !!profe.instituciones.length;
-          if (!hasInstitutions) return <Empty />;
+          if (!hasInstitutions) return null;
+          const profeFolders = Object.entries(institutionsFolders).reduce(
+            (acc, e) => {
+              const [key, value] = e;
+              const found = profe.instituciones.find(i => i.nombre === key);
+              if (found && value?.data) return [...acc, value.data];
 
+              return acc;
+            },
+            []
+          );
           return (
             <Grid item md={12} container spacing={2} key={profe.correo}>
               <CustomAccordion
                 classes={classes}
                 title={profe.nombre}
-                color={getAlertColor(profe.instituciones)}
+                color={getAlertColor(profeFolders)}
               >
                 <Box
                   width="100%"
@@ -322,7 +333,7 @@ export default function Home() {
                     return (
                       <CustomAccordion
                         loading={loadingInstitution}
-                        color={getAlertColor([i], true)}
+                        color={getAlertColor([data], true)}
                         classes={classes}
                         title={i.nombre}
                         key={i.nombre}
@@ -351,6 +362,15 @@ export default function Home() {
             </Grid>
           );
         })}
+      {isSuperAdmin && (
+        <Button
+          color="primary"
+          variant="outlined"
+          href="https://docs.google.com/spreadsheets/d/16bA7IH13vTZp0uyl3yqXmSMHWmG80x_Td-MT6PFyXg0/edit%5C#gid%5C=0"
+        >
+          Link Alta dirección
+        </Button>
+      )}
     </Grid>
   );
 }
