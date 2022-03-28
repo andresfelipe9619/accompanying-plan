@@ -363,7 +363,14 @@ export default function Home() {
           );
         })}
       {isAdmin && (
-        <Box display="flex" justifyContent="center" alignItems="center" p={3}>
+        <Box
+          p={3}
+          mt={5}
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          width="100%"
+        >
           <Button
             color="primary"
             variant="outlined"
