@@ -362,14 +362,21 @@ export default function Home() {
             </Grid>
           );
         })}
-      {isSuperAdmin && (
-        <Button
-          color="primary"
-          variant="outlined"
-          href="https://docs.google.com/spreadsheets/d/16bA7IH13vTZp0uyl3yqXmSMHWmG80x_Td-MT6PFyXg0/edit%5C#gid%5C=0"
-        >
-          Link Alta dirección
-        </Button>
+      {isAdmin && (
+        <Box display="flex" justifyContent="center" alignItems="center" p={3}>
+          <Button
+            color="primary"
+            variant="outlined"
+            onClick={() => {
+              const link =
+                'https://docs.google.com/spreadsheets/d/16bA7IH13vTZp0uyl3yqXmSMHWmG80x_Td-MT6PFyXg0/edit#gid=0';
+
+              return window.open(link, '_blank');
+            }}
+          >
+            Indice Entregables MEN
+          </Button>
+        </Box>
       )}
     </Grid>
   );
