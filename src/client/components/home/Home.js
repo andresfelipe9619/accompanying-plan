@@ -22,6 +22,8 @@ import CustomAccordion from '../form/CustomAccordion';
 
 const PENDING_MINUTES_COLOR = '#dd7e6b';
 const DEFAULT_INS_COLOR = 'rgb(85, 85, 85, 0.7)';
+const LINK =
+  'https://docs.google.com/spreadsheets/d/16bA7IH13vTZp0uyl3yqXmSMHWmG80x_Td-MT6PFyXg0/edit#gid=0';
 
 function NoAuthorized() {
   return <b>401 NOT AUTHORIZED</b>;
@@ -77,13 +79,32 @@ export default function Home() {
   const [viewIES, setViewIES] = useState(false);
   const [institutionsFolders, setInstitutionsFolders] = useState({});
   const classes = useStyles();
+  const lineKeys = Object.keys(selectedLines);
 
-  const setProjectAndLines = (project, mlines) => {
-    if (!project) return;
+  const getLinesToShow = (userLines = [], project) =>
+    (userLines || []).filter(ul =>
+      (lines || []).some(l => +l.id === +ul && +project === +l.proyecto)
+    );
+
+  const isLineSelected = l =>
+    (lineKeys || []).some(k => !!selectedLines[k] && +k === +l);
+
+  const filterByLine = p => {
+    const canShowProfe = isAccompanyingProfe(p.roles);
+    const isProfeFromSelectedLine = (p.lineas || []).some(isLineSelected);
+    if (canShowProfe && isProfeFromSelectedLine) return true;
+    return false;
+  };
+
+  const setProjectAndLines = project => {
+    if (!project || !currentUser) return;
     setSelectedProject(project);
-    const projectLines = mlines
-      .filter(l => +l.proyecto === +project)
-      .reduce((acc, l) => ({ ...acc, [l.id]: true }), {});
+    const lines2show = getLinesToShow(currentUser?.lineas, project);
+    console.log('lines2show', lines2show);
+    const projectLines = lines2show.reduce(
+      (acc, l) => ({ ...acc, [l]: true }),
+      {}
+    );
     console.log('projectLines', projectLines);
     setSelectedLines(projectLines);
   };
@@ -91,7 +112,7 @@ export default function Home() {
   const handleChangeProject = event => {
     const project = event.target.value;
     console.log('handleChangeProject', project);
-    setProjectAndLines(project, lines);
+    setProjectAndLines(project);
   };
 
   const handleChangeLine = event => {
@@ -182,7 +203,7 @@ export default function Home() {
       .filter(notNull => !!notNull);
     setProjects(profeProjects);
     const [first] = profeProjects;
-    setProjectAndLines(first, lines);
+    setProjectAndLines(first);
   }, [currentUser, lines]);
 
   if (loading) return <Loading />;
@@ -195,12 +216,6 @@ export default function Home() {
 
   if (!currentUser.rol) return <NoAuthorized />;
   const { roles = [], lineas, nombre } = currentUser;
-  const keys = Object.keys(selectedLines);
-
-  const isLineSelected = l =>
-    (keys || []).some(k => !!selectedLines[k] && +k === +l);
-  const filterByLine = p =>
-    isAccompanyingProfe(p.roles) && (p.lineas || []).some(isLineSelected);
 
   const multiRole = roles.length > 1;
   const showOnlyCurrentUser = !multiRole && isAccompanyingProfe(roles);
@@ -208,9 +223,7 @@ export default function Home() {
     ? [currentUser]
     : professors.filter(filterByLine);
   console.log('profes2Show', profes2Show);
-  const lines2show = (lineas || []).filter(ul =>
-    (lines || []).some(l => +l.id === +ul && +selectedProject === +l.proyecto)
-  );
+  const lines2show = getLinesToShow(lineas, selectedProject);
   const projectDependencies = [...new Set(projects)].map(map2select);
   const disabled = loading || projectDependencies.length === 1;
   const instituciones = profes2Show.map(p => p.instituciones).flatMap(f => f);
@@ -374,12 +387,7 @@ export default function Home() {
           <Button
             color="primary"
             variant="outlined"
-            onClick={() => {
-              const link =
-                'https://docs.google.com/spreadsheets/d/16bA7IH13vTZp0uyl3yqXmSMHWmG80x_Td-MT6PFyXg0/edit#gid=0';
-
-              return window.open(link, '_blank');
-            }}
+            onClick={() => window.open(LINK, '_blank')}
           >
             Indice Entregables MEN
           </Button>
